@@ -264,6 +264,15 @@ textarea.form-input { resize: vertical; min-height: 72px; }
   }
 }
 
+
+.loading-screen{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px;
+  color:var(--muted);
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1123,23 +1132,32 @@ function closeShootModal() { closeModal('shoot-modal-backdrop'); }
 function handleBackdropClick(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-async function initApp() {
-  await refreshData();
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await refreshData();
 
-  supabaseClient
-    .channel('realtime-shoots')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'shoots' },
-      async () => {
-        await refreshData();
-      }
-    )
-    .subscribe();
-}
+    supabaseClient
+      .channel('realtime-shoots')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shoots' },
+        async () => {
+          await refreshData();
+        }
+      )
+      .subscribe();
 
-initApp();
+  } catch (err) {
+    console.error('INIT ERROR:', err);
+
+    document.getElementById('dash-stats').innerHTML = `
+      <div class="empty-state">
+        <i class="ti ti-alert-circle"></i>
+        <span>Dashboard failed loading. Refresh once.</span>
+      </div>
+    `;
+  }
+});
 </script>
 </body>
 </html>
-
